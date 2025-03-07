@@ -1,12 +1,45 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import todo_icon from "../assets/todo_icon.png";
 import Todoitems from "./Todoitems";
 const Todo = () => {
   const inputRef = useRef();
+  const [todolist, settodolist] = useState(
+    localStorage.getItem("todos")
+      ? JSON.parse(localStorage.getItem("todos"))
+      : []
+  );
   const add = () => {
     const inputtext = inputRef.current.value.trim();
-    console.log(inputtext);
+    if (inputtext === " ") {
+      return null;
+    }
+    const newtodo = {
+      id: Date.now(),
+      text: inputtext,
+      iscomplete: false,
+    };
+    settodolist((prev) => [...prev, newtodo]);
+    inputRef.current.value = "";
   };
+
+  const deletetodo = (id) => {
+    settodolist((prevtodos) => {
+      return prevtodos.filter((todo) => todo.id !== id);
+    });
+  };
+  const toggle = (id) => {
+    settodolist((prevtodos) => {
+      return prevtodos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, iscomplete: !todo.iscomplete };
+        }
+        return todo;
+      });
+    });
+  };
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todolist));
+  }, [todolist]);
 
   return (
     <div className="bg-white place-self-center w-11/12 max-w-md flex flex-col p-7 min-h-[550px] rounded-xl">
@@ -35,7 +68,18 @@ const Todo = () => {
       {/* todo list */}
 
       <div>
-        <Todoitems text="Learn Cooking " />
+        {todolist.map((item, index) => {
+          return (
+            <Todoitems
+              key={index}
+              text={item.text}
+              id={item.id}
+              iscomplete={item.iscomplete}
+              deletetodo={deletetodo}
+              toggle={toggle}
+            />
+          );
+        })}
       </div>
     </div>
   );
